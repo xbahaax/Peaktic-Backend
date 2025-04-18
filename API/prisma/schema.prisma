@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "./diagram.pdf"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DB_URL") // or just use: url = "file:./dev.db"
+}
+
+model Store {
+  id           Int           @id @default(autoincrement())
+  name         String
+  address      String
+
+  stockDemands StockDemand[]
+  predictions  Prediction[]
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Product {
+  id           Int           @id @default(autoincrement())
+  name         String
+  price        Int
+  description  String?       @default("")
+  disponible   Boolean       @default(true)
+  stock        Int           @default(0)
+
+  stockDemands StockDemand[]
+  predictions  Prediction[]
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model StockDemand {
+  id         Int      @id @default(autoincrement())
+  storeId    Int
+  productId  Int
+  quantity   Int
+  date       DateTime @default(now())
+  status     String   @default("WAITING")
+
+  store      Store    @relation(fields: [storeId], references: [id])
+  product    Product  @relation(fields: [productId], references: [id])
+}
+
+model Prediction {
+  id           Int      @id @default(autoincrement())
+  productId    Int
+  storeId      Int
+  predictedQty Int
+  date         DateTime @default(now())
+
+  product      Product  @relation(fields: [productId], references: [id])
+  store        Store    @relation(fields: [storeId], references: [id])
+}

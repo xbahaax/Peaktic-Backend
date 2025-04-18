@@ -57,7 +57,7 @@ model Prediction {
   productId    Int
   storeId      Int
   predictedQty Int
-  date         DateTime @default(now())
+  week Int
 
   product      Product  @relation(fields: [productId], references: [id])
   store        Store    @relation(fields: [storeId], references: [id])

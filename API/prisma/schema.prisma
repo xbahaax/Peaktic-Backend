@@ -2,7 +2,6 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
 generator erd {
   provider = "prisma-erd-generator"
   output   = "./diagram.pdf"
@@ -13,11 +12,46 @@ datasource db {
   url      = env("DB_URL") // or just use: url = "file:./dev.db"
 }
 
+enum UserType {
+  FREE_TRIAL
+  BASIC
+  PREMIUM
+  BUSINESS
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
+  password     String
+  name         String
+  userType     UserType      @default(FREE_TRIAL)
+  
+  // User owns stores and products
+  stores       Store[]
+  products     Product[]
+  
+  sessions     Session[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
 model Store {
   id           Int           @id @default(autoincrement())
   name         String
   address      String
-
+  
+  // Store belongs to a user
+  userId       Int
+  user         User          @relation(fields: [userId], references: [id])
+  
   stockDemands StockDemand[]
   predictions  Prediction[]
 
@@ -32,6 +66,10 @@ model Product {
   description  String?       @default("")
   disponible   Boolean       @default(true)
   stock        Int           @default(0)
+  
+  // Product belongs to a user
+  userId       Int
+  user         User          @relation(fields: [userId], references: [id])
 
   stockDemands StockDemand[]
   predictions  Prediction[]
@@ -57,7 +95,7 @@ model Prediction {
   productId    Int
   storeId      Int
   predictedQty Int
-  week Int
+  week         Int
 
   product      Product  @relation(fields: [productId], references: [id])
   store        Store    @relation(fields: [storeId], references: [id])

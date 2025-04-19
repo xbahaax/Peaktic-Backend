@@ -1,4 +1,6 @@
 const productService = require('../services/productService');
+const { exec } = require('child_process');
+const path = require('path');
 
 // Create a new product
 exports.createProduct = async (req, res) => {
@@ -57,6 +59,27 @@ exports.deleteProduct = async (req, res) => {
     } else {
       res.status(404).json({ message: 'Product not found' });
     }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Process CSV file for predictions
+exports.predictCsv = async (req, res) => {
+  try {
+    const inputCsvPath = req.file.path;
+    const outputCsvPath = path.join(__dirname, '../output', `output_${Date.now()}.csv`);
+
+    exec(`python c:\\Users\\DELL\\Desktop\\Back\\Peaktic-Backend\\API\\predict.py ${inputCsvPath} ${outputCsvPath}`, (error, stdout, stderr) => {
+      if (error) {
+        return res.status(500).json({ error: error.message });
+      }
+      res.download(outputCsvPath, (err) => {
+        if (err) {
+          res.status(500).json({ error: err.message });
+        }
+      });
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
